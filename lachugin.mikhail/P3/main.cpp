@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 namespace lachugin {
-  int **dynmtx(const char* input, const char* output);
+
   int **make(int rows, int cols);
 
   int **make(int r, int c)
@@ -14,16 +14,7 @@ namespace lachugin {
     return mtx;
   }
 
-  int **dynmtx(const char* input, const char* output) {
-    std::ifstream fin(input);
-    if (!fin.is_open()) {
-      throw std::logic_error ("Error opening file");
-    }
-    size_t rows = 0, cols = 0;
-    fin >> rows >> cols;
-    if (fin.fail()) {
-      throw std::logic_error ("Error reading file");
-    }
+  int **dynmtx(std::ifstream& fin,size_t rows, size_t cols) {
     int **result = nullptr;
     result = make(rows, cols);
     for (size_t i = 0; i < rows; i++) {
@@ -34,6 +25,39 @@ namespace lachugin {
     fin.close();
     return result;
   };
+
+  int *LFT_BOT_CLK (int **mtx, size_t rows, size_t cols) {
+    size_t d = 1;
+    size_t k = 0;
+    size_t n = 0;
+    while (d < rows * cols) {
+      for (int i = (rows-1)-n; i >= 0+n; i--) {   // up
+        mtx[i][0+n] -= d;
+        d++;
+      }
+
+      k++;
+
+
+      for (int i = 0+k; i < cols-n; i++) { // right
+        mtx[0+n][i] -= d;
+        d++;
+      }
+
+      for (int i = 0+k; i < rows-n; i++) {   // down
+        mtx[i][0-n] -= d;
+        d++;
+      }
+
+
+      n++;
+
+      for (int i = (cols-1)-n; i >= 0+n; i--) {   // left
+        mtx[(rows-1)-n][i] -= d;
+        d++;
+      }
+    }
+  }
 
 
 
@@ -62,10 +86,23 @@ int main(int argc, char ** argv) {
   }
   if ( prmt > 2 || prmt < 1 ){
     std::cerr << "First parameter is out of range\n";
+    return 1;
   }
-
+  std::ifstream fin(argv[2]);
+  if (!fin.is_open()) {
+     std::cerr << "Error opening file\n";
+    return 1;
+  }
+  size_t rows = 0, cols = 0;
+  fin >> rows >> cols;
+  if (fin.fail()) {
+    std::cerr <<  "Error reading file\n";
+    return 1;
+  }
+  int *var1 = nullptr;
   if (prmt == 2) {
     int **mtx = nullptr;
-    mtx = lachugin::dynmtx(argv[2], argv[3]);
+    mtx = lachugin::dynmtx(fin, rows, cols);
+
   }
 }
