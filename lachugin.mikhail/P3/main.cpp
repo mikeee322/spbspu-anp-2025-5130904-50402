@@ -4,7 +4,9 @@ namespace lachugin {
 
   double circle( int **mtx,long long i, long long j);
   int **dynmtx(int r, int c);
-  int **staticmtx(int **mtx, int r, int c);
+  void staticmtx (std::ifstream& fin,int (&arr)[1000][1000] ,size_t r, size_t c);
+  int *convert_int(int **a, size_t r, size_t c, int prmt);
+  double *convert_dbl(double **a, size_t r, size_t c, int prmt);
   int *LFT_BOT_CLK (int **mtx, size_t rows, size_t cols, int prmt);
   double *BLT_SMT_MTR (int **mtx, size_t rows, size_t cols, int prmt);
   int **make(std::ifstream& fin,size_t rows, size_t cols, int prmt);
@@ -19,12 +21,10 @@ namespace lachugin {
       result = &arr[0];
     }
     size_t start = 0;
-    while (start < r * c) {
-      for (size_t i = start; i < start + c; i++) {
-        for (size_t j = 0; j < c; j++) {
-          result [start] = a[i][j];
-          start++;
-        }
+    for (size_t i = 0; i < r; i++) {
+      for (size_t j = 0; j < c; j++) {
+        result [start] = a[i][j];
+        start++;
       }
     }
     return result;
@@ -40,20 +40,22 @@ namespace lachugin {
       result = &arr[0];
     }
     size_t start = 0;
-    while (start < r * c) {
-      for (size_t i = start; i < start + c; i++) {
-        for (size_t j = 0; j < c; j++) {
-          result [start] = a[i][j];
-          start++;
-        }
+    for (size_t i = 0; i < r; i++) {
+      for (size_t j = 0; j < c; j++) {
+        result [start] = a[i][j];
+        start++;
       }
     }
     return result;
   }
 
-
   int **dynmtx(size_t r, size_t c){
-    int **mtx = new int *[r];
+    int **mtx = nullptr;
+    try {
+      mtx = new int *[r];
+    } catch (const std::bad_alloc &e) {
+      throw;
+    }
     for (size_t i = 0; i < r; i++){
       mtx[i] = new int[c];
     }
@@ -71,6 +73,12 @@ namespace lachugin {
     for (size_t i = 0; i < rows; i++) {
       for (size_t j = 0; j < cols; j++) {
         fin >> result[i][j];
+        if (fin.eof()) {
+          throw std::logic_error("Not enough data\n");
+        }
+        if (fin.fail()) {
+          throw std::logic_error("Can't read\n");
+        }
       }
     }
     fin.close();
@@ -136,6 +144,7 @@ namespace lachugin {
   double *BLT_SMT_MTR (int **mtx, size_t rows, size_t cols, int prmt) {
     double **a = nullptr;
     a = fopy(a, mtx, rows, cols);
+
     for (size_t i = 0; i < rows; i++) {
       for (size_t j = 0; j < cols; j++) {
         a[i][j] = circle(mtx, i, j);
@@ -146,7 +155,7 @@ namespace lachugin {
     return result;
   }
 
-  double circle(int **mtx,long long i, long long j) {
+  double circle(int **mtx,int i, int j) {
     size_t k = 0;
     size_t sum = 0;
     if (i-1 >= 0&& j-1 >= 0) {
@@ -170,6 +179,10 @@ namespace lachugin {
     } else if (j+1 >= 0 && i-1 >= 0) {
       k++;
       sum += mtx[i-1][j+1];
+    }
+    if (i-1>=0) {
+      k++;
+      sum += mtx[i-1][j];
     }
     double result = static_cast<double>(sum)/k;
     return result;
@@ -223,6 +236,7 @@ int main(int argc, char ** argv) {
   }
   int *var1 = nullptr;
   double *var2 = nullptr;
+
   if (prmt == 2) {
     int **mtx = nullptr;
     int **zero = nullptr;
